@@ -204,12 +204,26 @@
   // Determine whether all of the elements match a truth test.
   _.every = function(collection, iterator) {
     // TIP: Try re-using reduce() here.
+    iterator = iterator || _.identity;
+    return !!_.reduce(collection, function(trueSoFar, item) {
+      if (trueSoFar) {
+        return iterator(item);
+      }
+    }, true);
+
   };
 
   // Determine whether any of the elements pass a truth test. If no iterator is
   // provided, provide a default one
   _.some = function(collection, iterator) {
     // TIP: There's a very clever way to re-use every() here.
+    iterator = iterator || _.identity;
+    return !!_.reduce(collection, function(trueSoFar, item) {
+      if (trueSoFar) {
+        return true;
+      }
+      return iterator(item);
+    }, false);
   };
 
 
@@ -232,11 +246,27 @@
   //     bla: "even more stuff"
   //   }); // obj1 now contains key1, key2, key3 and bla
   _.extend = function(obj) {
+    _.each(arguments, function(objs) {
+      _.each(objs, function(value, key) {
+        obj[key] = value;
+      });
+    });
+
+    return obj;
   };
 
   // Like extend, but doesn't ever overwrite a key that already
   // exists in obj
   _.defaults = function(obj) {
+    _.each(arguments, function(objs) {
+      _.each(objs, function(value, key) {
+        if (obj[key] === undefined) {
+          obj[key] = value;
+        }
+      });
+    });
+
+    return obj;
   };
 
 
@@ -280,6 +310,17 @@
   // already computed the result for the given argument and return that value
   // instead if possible.
   _.memoize = function(func) {
+    var dict = {};
+
+    return function(...args) {
+      var key = JSON.stringify(args);
+      if (dict.hasOwnProperty(key)) {
+        return dict[key];
+      } else {
+        dict[key] = func.apply(null, args);
+        return dict[key];
+      }
+    };
   };
 
   // Delays a function for the given number of milliseconds, and then calls
@@ -289,6 +330,17 @@
   // parameter. For example _.delay(someFunction, 500, 'a', 'b') will
   // call someFunction('a', 'b') after 500ms
   _.delay = function(func, wait) {
+    var temp = [];
+    for (var i = 2; i < arguments.length; i++) {
+      // if (arguments.length > 0) {
+      //   debugger;
+      // }
+      temp.push(arguments[i]);
+    }
+    var result = function() {
+      func.apply(this, temp);
+    };
+    setTimeout(result, wait);
   };
 
 
@@ -303,6 +355,21 @@
   // input array. For a tip on how to make a copy of an array, see:
   // http://mdn.io/Array.prototype.slice
   _.shuffle = function(array) {
+    var copy = array.slice();
+    var res = [];
+    var randomDraw = function (arr, min, max) {
+      var randIdx = Math.floor(Math.random() * (max - min)) + min;
+      var temp = arr[randIdx];
+      arr.splice(randIdx, 1);
+      return temp;
+    };
+    var min = 0;
+    var max = copy.length;
+    while (max > 0) {
+      res.push(randomDraw(copy, min, max));
+      max--;
+    }
+    return res;
   };
 
 
